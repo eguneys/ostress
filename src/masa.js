@@ -1,6 +1,6 @@
 const { page } = require('./http');
 const { connect } = require('./ws');
-const { arand } = require('./util');
+const { rand, arand } = require('./util');
 
 function getMasa(ctx) {
   let masa = arand(ctx.masas);
@@ -15,7 +15,7 @@ function getMasa(ctx) {
     http,
     step: 'masa',
     onResponse: (response) => {
-      return response.data;
+      return { "masa":  response.data };
     }
   })(ctx);
 }
@@ -23,20 +23,62 @@ function getMasa(ctx) {
 const hangMasa = function(opts) {
 
   return ctx => {
-    const endpoint = ctx.url.socket;
+    const sessionId = ctx.sessionId;
+    const endpoint = ctx.masa.url.socket;
+    const headers = {
+      Cookie: `oyun2=sessionId=${sessionId}`
+    };
+
     const handler = new masaHandler(opts, ctx);
 
     return connect({
       endpoint,
-      handler
+      handler,
+      headers
     })(ctx);
   };
 };
 
 function masaHandler(opts, ctx) {
 
+  let masa = ctx.masa;
+  let seats = masa.seats;
+
+  const rD = (f, delay = 1000) => {
+    setTimeout(f, rand(0, delay));
+  };
+
+  const emptySeatIndex = () => {
+    return seats.reduce((acc, seat, i) => {
+      if (seat === null) {
+        return i;
+      }
+      return acc;
+    }, -1);
+  };
+
+  const maybeJoin = () => {
+    let empty = emptySeatIndex();
+    if (empty !== -1) {
+      this.send("sit", empty + "");
+    }
+  };
+
+  const maybeLeave = () => {
+    this.send('sitoutNext', true);
+  };
+
+  const side = (side) => parseInt(side);
+
   this.handlers = {
-    
+    sitoutnext(data) {
+      seats[side(data.side)] = data.player;
+      rD(maybeJoin);
+    },
+    buyin(data) {
+      seats[side(data.side)] = data.player;
+      rD(maybeLeave);
+    }
   };
 
   this.in = (data) => {
@@ -47,6 +89,7 @@ function masaHandler(opts, ctx) {
 
   this.onOut = send => {
     this.send = send;
+    rD(maybeJoin);
   };
 };
 

@@ -2,7 +2,7 @@ const WebSocketClient = require('websocket').client;
 
 function connect(opts) {
 
-  const { endpoint, handler } = opts;
+  const { endpoint, headers, handler } = opts;
 
   return (ctx) => {
 
@@ -44,7 +44,11 @@ function connect(opts) {
 
     });
 
-    ws.connect(url);
+
+    const protocols = [],
+          origin = null;
+
+    ws.connect(url, protocols, origin, headers);
 
     return res;
   };

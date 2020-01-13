@@ -85,7 +85,7 @@ async function tests(opts) {
 
     return tu
       .middle({ id, ...opts },
-              tu.login,
+              tu.loginForce,
               tu.getLobby,
               tu.getMasa,
               tu.hangMasa({
