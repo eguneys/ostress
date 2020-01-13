@@ -8,7 +8,7 @@ async function tests(opts) {
 
   let { endpoint, level } = opts;
 
-  log('Stress Test ' + endpoint.base);
+  log(`Stress Test (${level}) ${endpoint.baseUrl}`);
 
   const makeId = (id) => id;
 
@@ -43,16 +43,15 @@ async function tests(opts) {
 
   }));
 
-  tPOnly(bots((i) => {
+  tP(bots((i) => {
 
     let id = makeId('lobby' + i);
 
     tu.middle({ id, ...opts },
               tu.loginForce,
-              tu.joinLobby,
+              tu.getLobby,
               tu.tap(ctx => {
-                console.log(ctx.steps, ctx.error);
-                is('join lobby ' + id, ctx.username, id);
+                ok('join lobby [masas] ' + id, ctx.masas);
               }),
               tu.hangOut);
 
@@ -63,8 +62,8 @@ async function tests(opts) {
 
     tu.middle({ id, ...opts },
               tu.login,
-              tu.joinLobby,
-              tu.joinMasa,
+              tu.getLobby,
+              tu.getMasa,
               tu.hangOut);
   }, bl.joinMasa));
 
@@ -74,8 +73,8 @@ async function tests(opts) {
 
     tu.middle({ id, ...opts },
               tu.login,
-              tu.joinLobby,
-              tu.joinMasa,
+              tu.getLobby,
+              tu.getMasa,
               tu.buyIn,
               tu.hangOut);  
   }, bl.buyIn));
@@ -87,9 +86,10 @@ const baseUrl = 'http://localhost:9663';
 
 tests({
   endpoint: {
-    base: baseUrl,
-    login: `${baseUrl}/login`,
-    signup: `${baseUrl}/signup`,
+    baseUrl: baseUrl,
+    login: `/login`,
+    signup: `/signup`,
+    lobby: `/`,
     ws: 'localhost:9664',
   },
   headers: {

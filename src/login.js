@@ -8,6 +8,7 @@ function login(ctx) {
 
   return axios({
     method: 'post',
+    baseURL: ctx.endpoint.baseUrl,
     url: ctx.endpoint.login,
     headers: ctx.headers,
     data: {
@@ -43,6 +44,7 @@ function signup(ctx) {
 
   return axios({
     method: 'post',
+    baseURL: ctx.endpoint.baseUrl,
     url: ctx.endpoint.signup,
     headers: ctx.headers,
     data: {
