@@ -1,39 +1,35 @@
 function middle(context,
               ...fns) {
   return fns
-    .reduce((ctx, fn) => fn(ctx), context);
+    .reduce((pCtx, fn) => pCtx.then(fn), Promise.resolve(context));
 }
+
+function tap(fn) {
+  
+  return ctx => {
+    fn(ctx);
+    return Promise.resolve(ctx);
+  };
+};
+
+const log = tap(ctx => {
+  console.log(without(ctx, 'endpoint'));
+});
 
 function hangOut(ctx) {
-  console.log(without(ctx, 'endpoint'));
-  return ctx;
-}
-
-function login(ctx) {
-  return ctx;
+  return Promise.resolve(ctx);
 }
 
 function joinLobby(ctx) {
-  return ctx;
+  return Promise.resolve(ctx);
 }
 
 function joinMasa(ctx) {
-  return ctx;
+  return Promise.resolve(ctx);
 }
 
 function buyIn(ctx) {
-  return ctx;  
-}
-
-function bots(f, n) {
-  let res = [];
-
-  for (let i = 0; i < n; i++) {
-    res.push(new Promise(resolve => {
-      setTimeout(() => { resolve(f(i)); }, 0);
-    }));
-  }
-  return Promise.all(res);
+  return Promise.resolve(ctx);  
 }
 
 function without(ctx, ...excludes) {
@@ -44,12 +40,17 @@ function without(ctx, ...excludes) {
   return ctx2;
 }
 
+let { login,
+      loginForce } = require('./login');
+
 module.exports = {
-  bots,
   middle,
-  login,
-  joinLobby,
+  tap,
   hangOut,
+  log,
+  login,
+  loginForce,
+  joinLobby,
   joinMasa,
   buyIn
 };

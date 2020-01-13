@@ -1,46 +1,99 @@
 const { log, ok, is, not } = require('testiz');
 
 const tu = require('./testutils');
-const { bots } = tu;
+const makePusher = require('./testpusher');
+const { bots, botLevels } = require('./bots');
 
-function tests(opts) {
+async function tests(opts) {
 
-  let { endpoint } = opts;
+  let { endpoint, level } = opts;
 
-  log('Stress Test ' + endpoint);
+  log('Stress Test ' + endpoint.base);
 
-  bots((i) => {
+  const makeId = (id) => id;
 
-    tu.middle({ id: 'lobby' + i, endpoint },
+  const pusher = new makePusher({
+    warnOnly: (l) => {
+      console.log('running only ', l);
+    }
+  });
+
+  const { tP, tPOnly } = pusher;
+
+  const bl = new botLevels(level);
+
+  tP(bots((i) => {
+    let id = makeId('login' + i);
+
+    tu.middle({ id, ...opts },
               tu.login,
+              tu.tap(ctx => {
+                is('login unauthorized 401', ctx.error.status, 401);
+              }));
+  }));
+
+  tP(bots(i => {
+    let id = makeId('loginf' + i);
+
+    tu.middle({ id, ...opts },
+              tu.loginForce,
+              tu.tap(ctx => {
+                is('login success', ctx.username, id);
+              }));
+
+  }));
+
+  tPOnly(bots((i) => {
+
+    let id = makeId('lobby' + i);
+
+    tu.middle({ id, ...opts },
+              tu.loginForce,
               tu.joinLobby,
+              tu.tap(ctx => {
+                console.log(ctx.steps, ctx.error);
+                is('join lobby ' + id, ctx.username, id);
+              }),
               tu.hangOut);
 
-  }, 10);
+  }, bl.joinLobby));
 
-  bots(i => {
-    tu.middle({ id: 'masa' + i, endpoint },
+  tP(bots(i => {
+    let id = makeId('masa' + i);
+
+    tu.middle({ id, ...opts },
               tu.login,
               tu.joinLobby,
               tu.joinMasa,
               tu.hangOut);
-  }, 10);
+  }, bl.joinMasa));
 
-  bots(i => {
+  tP(bots(i => {
 
-    tu.middle({ id: 'buyin' + i, endpoint },
+    let id = makeId('buyin' + i);
+
+    tu.middle({ id, ...opts },
               tu.login,
               tu.joinLobby,
               tu.joinMasa,
               tu.buyIn,
               tu.hangOut);  
-  }, 10);
+  }, bl.buyIn));
 
+  return Promise.all(pusher.run());
 }
+
+const baseUrl = 'http://localhost:9663';
 
 tests({
   endpoint: {
-    http: 'localhost:9663',
-    ws: 'localhost:9664'
-  }
+    base: baseUrl,
+    login: `${baseUrl}/login`,
+    signup: `${baseUrl}/signup`,
+    ws: 'localhost:9664',
+  },
+  headers: {
+    Accept: 'application/vnd.oyunkeyf.v1+json'
+  },
+  level: 'dev'
 });
