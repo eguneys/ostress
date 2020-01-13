@@ -20,10 +20,6 @@ function hangOut(ctx) {
   return Promise.resolve(ctx);
 }
 
-function getMasa(ctx) {
-  return Promise.resolve(ctx);
-}
-
 function buyIn(ctx) {
   return Promise.resolve(ctx);  
 }
@@ -39,7 +35,9 @@ function without(ctx, ...excludes) {
 let { login,
       loginForce } = require('./login');
 
-let { getLobby } = require('./lobby');
+let { getLobby, hangLobby } = require('./lobby');
+
+let { getMasa, hangMasa } = require('./masa');
 
 module.exports = {
   middle,
@@ -49,6 +47,8 @@ module.exports = {
   login,
   loginForce,
   getLobby,
+  hangLobby,
   getMasa,
+  hangMasa,
   buyIn
 };

@@ -5,7 +5,7 @@ function bots(f, n = 1) {
 
     for (let i = 0; i < n; i++) {
       res.push(new Promise(resolve => {
-        setTimeout(() => { resolve(f(i)); }, 0);
+        setTimeout(() => { f(i).then(resolve); }, 0);
       }));
     }
     return Promise.all(res);
